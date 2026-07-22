@@ -3,7 +3,7 @@ import sqlite3
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-DB_PATH = BASE_DIR / "learning_tasks.db"
+DB_PATH = BASE_DIR / "evidenceqa.db"
 
 
 def get_connection(db_path: Path | None = None) -> sqlite3.Connection:
@@ -17,15 +17,14 @@ def init_db(db_path: Path | None = None) -> None:
     with get_connection(db_path) as connection:
         connection.execute(
             """
-            CREATE TABLE IF NOT EXISTS tasks (
+            CREATE TABLE IF NOT EXISTS documents (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 title TEXT NOT NULL,
-                description TEXT NOT NULL DEFAULT '',
-                category TEXT NOT NULL DEFAULT 'backend',
-                priority INTEGER NOT NULL DEFAULT 2,
-                completed INTEGER NOT NULL DEFAULT 0,
+                source_name TEXT NOT NULL,
+                content_type TEXT NOT NULL,
+                content TEXT NOT NULL,
+                content_length INTEGER NOT NULL,
                 created_at TEXT NOT NULL
             )
             """
         )
-
