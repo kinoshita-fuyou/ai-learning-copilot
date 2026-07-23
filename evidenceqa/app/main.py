@@ -3,14 +3,17 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile, status
 
+from app.chunking import chunk_text, normalize_text
 from app.database import DB_PATH, init_db
 from app.repository import (
     create_document,
     delete_document,
     get_document,
+    list_document_chunks,
     list_documents,
+    replace_document_chunks,
 )
-from app.schemas import DocumentOut
+from app.schemas import DocumentChunkOut, DocumentOut
 
 
 ALLOWED_EXTENSIONS = {".md", ".txt"}
@@ -62,14 +65,24 @@ async def upload_document(file: UploadFile = File(...)) -> dict:
             detail="Document must use UTF-8 encoding.",
         ) from error
 
+    normalized_content = normalize_text(content)
+    if not normalized_content:
+        raise HTTPException(status_code=422, detail="Document must contain readable text.")
+
     title = Path(source_name).stem
-    return create_document(
+    document = create_document(
         title=title,
         source_name=source_name,
         content_type=file.content_type or "text/plain",
-        content=content,
+        content=normalized_content,
         db_path=app.state.db_path,
     )
+    replace_document_chunks(
+        document_id=document["id"],
+        chunks=chunk_text(normalized_content),
+        db_path=app.state.db_path,
+    )
+    return get_document(document["id"], app.state.db_path)
 
 
 @app.get("/documents", response_model=list[DocumentOut])
@@ -83,6 +96,13 @@ def api_get_document(document_id: int) -> dict:
     if document is None:
         raise HTTPException(status_code=404, detail="Document not found")
     return document
+
+
+@app.get("/documents/{document_id}/chunks", response_model=list[DocumentChunkOut])
+def api_list_document_chunks(document_id: int) -> list[dict]:
+    if get_document(document_id, app.state.db_path) is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+    return list_document_chunks(document_id, app.state.db_path)
 
 
 @app.delete("/documents/{document_id}", status_code=status.HTTP_204_NO_CONTENT)

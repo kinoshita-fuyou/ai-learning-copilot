@@ -21,20 +21,28 @@ def test_health_check(tmp_path: Path) -> None:
     assert response.json() == {"status": "ok", "service": "evidenceqa-api"}
 
 
-def test_upload_and_list_documents(tmp_path: Path) -> None:
+def test_upload_normalizes_and_chunks_documents(tmp_path: Path) -> None:
     client = make_client(tmp_path)
+    content = "\n\n".join(
+        f"Section {index}: " + "A" * 120 for index in range(6)
+    ).encode()
 
     upload_response = client.post(
         "/documents/upload",
-        files={"file": ("security-policy.md", b"# Security policy\nUse MFA.", "text/markdown")},
+        files={"file": ("security-policy.md", content, "text/markdown")},
     )
     list_response = client.get("/documents")
+    document_id = upload_response.json()["id"]
+    chunks_response = client.get(f"/documents/{document_id}/chunks")
 
     assert upload_response.status_code == 201
     assert upload_response.json()["title"] == "security-policy"
-    assert upload_response.json()["content_length"] == 26
+    assert upload_response.json()["chunk_count"] >= 2
     assert list_response.status_code == 200
     assert len(list_response.json()) == 1
+    assert chunks_response.status_code == 200
+    assert chunks_response.json()[0]["char_start"] == 0
+    assert chunks_response.json()[0]["content"].startswith("Section 0")
 
 
 def test_document_metadata_and_deletion(tmp_path: Path) -> None:

@@ -3,6 +3,7 @@ from pathlib import Path
 import sqlite3
 
 from app.database import get_connection
+from app.chunking import TextChunk
 
 
 def create_document(
@@ -34,9 +35,18 @@ def list_documents(db_path: Path | None = None) -> list[dict]:
     with get_connection(db_path) as connection:
         rows = connection.execute(
             """
-            SELECT id, title, source_name, content_type, content_length, created_at
+            SELECT
+                documents.id,
+                documents.title,
+                documents.source_name,
+                documents.content_type,
+                documents.content_length,
+                documents.created_at,
+                COUNT(chunks.id) AS chunk_count
             FROM documents
-            ORDER BY id DESC
+            LEFT JOIN chunks ON chunks.document_id = documents.id
+            GROUP BY documents.id
+            ORDER BY documents.id DESC
             """
         ).fetchall()
     return [dict(row) for row in rows]
@@ -46,13 +56,57 @@ def get_document(document_id: int, db_path: Path | None = None) -> dict | None:
     with get_connection(db_path) as connection:
         row = connection.execute(
             """
-            SELECT id, title, source_name, content_type, content_length, created_at
+            SELECT
+                documents.id,
+                documents.title,
+                documents.source_name,
+                documents.content_type,
+                documents.content_length,
+                documents.created_at,
+                COUNT(chunks.id) AS chunk_count
             FROM documents
-            WHERE id = ?
+            LEFT JOIN chunks ON chunks.document_id = documents.id
+            WHERE documents.id = ?
+            GROUP BY documents.id
             """,
             (document_id,),
         ).fetchone()
     return dict(row) if row else None
+
+
+def replace_document_chunks(
+    document_id: int,
+    chunks: list[TextChunk],
+    db_path: Path | None = None,
+) -> None:
+    created_at = datetime.now(timezone.utc).isoformat()
+    rows = [
+        (document_id, index, chunk.content, chunk.char_start, chunk.char_end, created_at)
+        for index, chunk in enumerate(chunks)
+    ]
+    with get_connection(db_path) as connection:
+        connection.execute("DELETE FROM chunks WHERE document_id = ?", (document_id,))
+        connection.executemany(
+            """
+            INSERT INTO chunks (document_id, chunk_index, content, char_start, char_end, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            rows,
+        )
+
+
+def list_document_chunks(document_id: int, db_path: Path | None = None) -> list[dict]:
+    with get_connection(db_path) as connection:
+        rows = connection.execute(
+            """
+            SELECT id, chunk_index, content, char_start, char_end, created_at
+            FROM chunks
+            WHERE document_id = ?
+            ORDER BY chunk_index
+            """,
+            (document_id,),
+        ).fetchall()
+    return [dict(row) for row in rows]
 
 
 def delete_document(document_id: int, db_path: Path | None = None) -> bool:
