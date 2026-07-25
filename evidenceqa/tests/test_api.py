@@ -69,3 +69,24 @@ def test_reject_unsupported_document_type(tmp_path: Path) -> None:
     )
 
     assert response.status_code == 415
+
+
+def test_search_ranks_relevant_chunk_first(tmp_path: Path) -> None:
+    client = make_client(tmp_path)
+    expense_doc = client.post(
+        "/documents/upload",
+        files={"file": ("expense.md", "差旅报销需要部门主管提前审批，发票必须在三十天内提交。".encode(), "text/markdown")},
+    ).json()
+    client.post(
+        "/documents/upload",
+        files={"file": ("wifi.md", "Office wifi passwords rotate monthly. Contact IT to reset access.".encode(), "text/markdown")},
+    )
+
+    response = client.get("/search", params={"q": "报销审批流程", "top_k": 3})
+
+    assert response.status_code == 200
+    hits = response.json()
+    assert hits
+    assert hits[0]["document_id"] == expense_doc["id"]
+    assert hits[0]["title"] == "expense"
+    assert hits[0]["score"] >= hits[-1]["score"]

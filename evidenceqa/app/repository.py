@@ -1,9 +1,10 @@
 from datetime import datetime, timezone
+import json
 from pathlib import Path
-import sqlite3
 
 from app.database import get_connection
 from app.chunking import TextChunk
+from app.embeddings import HashingEmbedder
 
 
 def create_document(
@@ -77,22 +78,47 @@ def get_document(document_id: int, db_path: Path | None = None) -> dict | None:
 def replace_document_chunks(
     document_id: int,
     chunks: list[TextChunk],
+    embedder: HashingEmbedder,
     db_path: Path | None = None,
 ) -> None:
     created_at = datetime.now(timezone.utc).isoformat()
     rows = [
-        (document_id, index, chunk.content, chunk.char_start, chunk.char_end, created_at)
+        (
+            document_id,
+            index,
+            chunk.content,
+            chunk.char_start,
+            chunk.char_end,
+            json.dumps(embedder.embed(chunk.content)),
+            created_at,
+        )
         for index, chunk in enumerate(chunks)
     ]
     with get_connection(db_path) as connection:
         connection.execute("DELETE FROM chunks WHERE document_id = ?", (document_id,))
         connection.executemany(
             """
-            INSERT INTO chunks (document_id, chunk_index, content, char_start, char_end, created_at)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO chunks (
+                document_id, chunk_index, content, char_start, char_end, embedding, created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
             rows,
         )
+
+
+def backfill_chunk_embeddings(embedder: HashingEmbedder, db_path: Path | None = None) -> int:
+    """Fill embeddings for chunks created before the embedding column existed."""
+    with get_connection(db_path) as connection:
+        rows = connection.execute(
+            "SELECT id, content FROM chunks WHERE embedding IS NULL"
+        ).fetchall()
+        for row in rows:
+            connection.execute(
+                "UPDATE chunks SET embedding = ? WHERE id = ?",
+                (json.dumps(embedder.embed(row["content"])), row["id"]),
+            )
+    return len(rows)
 
 
 def list_document_chunks(document_id: int, db_path: Path | None = None) -> list[dict]:

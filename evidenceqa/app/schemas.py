@@ -20,3 +20,15 @@ class DocumentChunkOut(BaseModel):
     char_start: int
     char_end: int
     created_at: datetime
+
+
+class SearchHit(BaseModel):
+    chunk_id: int
+    document_id: int
+    title: str
+    source_name: str
+    chunk_index: int
+    content: str
+    char_start: int
+    char_end: int
+    score: float

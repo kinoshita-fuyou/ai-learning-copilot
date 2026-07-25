@@ -6,7 +6,7 @@ EvidenceQA 的目标不是做一个只会聊天的页面，而是让回答能回
 
 ## 当前进度
 
-### 已完成：文档接入与切分层
+### 已完成：文档接入、切分与本地向量检索
 
 - FastAPI 服务与自动化接口文档
 - Markdown / TXT 上传，UTF-8 编码、空文件、文件类型与 1 MB 大小校验
@@ -14,14 +14,15 @@ EvidenceQA 的目标不是做一个只会聊天的页面，而是让回答能回
 - 文档列表、详情查询、删除接口
 - 段落优先的文本清洗与切分，保留 chunk 字符范围和重叠上下文
 - Chunk 预览接口，便于排查后续检索效果
+- 本地确定性 Embedding（特征哈希，免 API Key，接口与云端 Embedding 一致可替换）
+- 余弦相似度 Top-K 检索接口 `/search`，返回 chunk 来源与字符范围
 - Pytest 接口测试
 
 ### 即将完成
 
-1. Embedding、向量索引与混合检索
-2. 带来源引用的 RAG 问答
-3. 检索评测集、延迟和质量指标
-4. 简洁 Web 控制台、Docker 与演示数据
+1. 带来源引用的 RAG 问答
+2. 检索评测集、延迟和质量指标
+3. 简洁 Web 控制台、Docker 与演示数据
 
 ## 架构
 
@@ -39,6 +40,7 @@ Document upload -> SQLite document store -> chunk pipeline -> vector retrieval
 | GET | `/documents` | 查看文档列表 |
 | GET | `/documents/{document_id}` | 查看文档元数据 |
 | GET | `/documents/{document_id}/chunks` | 查看清洗后的切分结果 |
+| GET | `/search?q=...&top_k=5` | 向量检索最相关 chunk，含来源与字符范围 |
 | DELETE | `/documents/{document_id}` | 删除文档 |
 
 启动后可访问 `http://127.0.0.1:8001/docs` 直接试用接口。

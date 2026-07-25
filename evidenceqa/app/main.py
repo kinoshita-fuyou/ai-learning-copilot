@@ -1,11 +1,13 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, UploadFile, status
+from fastapi import FastAPI, File, HTTPException, Query, UploadFile, status
 
 from app.chunking import chunk_text, normalize_text
 from app.database import DB_PATH, init_db
+from app.embeddings import HashingEmbedder
 from app.repository import (
+    backfill_chunk_embeddings,
     create_document,
     delete_document,
     get_document,
@@ -13,7 +15,8 @@ from app.repository import (
     list_documents,
     replace_document_chunks,
 )
-from app.schemas import DocumentChunkOut, DocumentOut
+from app.retrieval import search_chunks
+from app.schemas import DocumentChunkOut, DocumentOut, SearchHit
 
 
 ALLOWED_EXTENSIONS = {".md", ".txt"}
@@ -24,16 +27,18 @@ MAX_DOCUMENT_BYTES = 1_000_000
 async def lifespan(app: FastAPI):
     db_path = Path(app.state.db_path)
     init_db(db_path)
+    backfill_chunk_embeddings(embedder, db_path)
     yield
 
 
 app = FastAPI(
     title="EvidenceQA API",
     description="可追溯企业知识库问答系统的后端服务。",
-    version="0.2.0",
+    version="0.3.0",
     lifespan=lifespan,
 )
 app.state.db_path = DB_PATH
+embedder = HashingEmbedder()
 
 
 @app.get("/health")
@@ -80,9 +85,18 @@ async def upload_document(file: UploadFile = File(...)) -> dict:
     replace_document_chunks(
         document_id=document["id"],
         chunks=chunk_text(normalized_content),
+        embedder=embedder,
         db_path=app.state.db_path,
     )
     return get_document(document["id"], app.state.db_path)
+
+
+@app.get("/search", response_model=list[SearchHit])
+def api_search(
+    q: str = Query(..., min_length=1, max_length=500),
+    top_k: int = Query(5, ge=1, le=20),
+) -> list[dict]:
+    return search_chunks(query=q, embedder=embedder, top_k=top_k, db_path=app.state.db_path)
 
 
 @app.get("/documents", response_model=list[DocumentOut])

@@ -38,9 +38,15 @@ def init_db(db_path: Path | None = None) -> None:
                 content TEXT NOT NULL,
                 char_start INTEGER NOT NULL,
                 char_end INTEGER NOT NULL,
+                embedding TEXT,
                 created_at TEXT NOT NULL,
                 UNIQUE(document_id, chunk_index),
                 FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE
             )
             """
         )
+        chunk_columns = {
+            row[1] for row in connection.execute("PRAGMA table_info(chunks)")
+        }
+        if "embedding" not in chunk_columns:
+            connection.execute("ALTER TABLE chunks ADD COLUMN embedding TEXT")
