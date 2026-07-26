@@ -90,3 +90,21 @@ def test_search_ranks_relevant_chunk_first(tmp_path: Path) -> None:
     assert hits[0]["document_id"] == expense_doc["id"]
     assert hits[0]["title"] == "expense"
     assert hits[0]["score"] >= hits[-1]["score"]
+
+
+def test_ask_returns_answer_with_sources(tmp_path: Path) -> None:
+    client = make_client(tmp_path)
+    client.post(
+        "/documents/upload",
+        files={"file": ("policy.md", "远程办公需要提前一周向主管申请并填写审批表。".encode(), "text/markdown")},
+    )
+
+    response = client.post("/ask", json={"question": "远程办公的审批流程是什么", "top_k": 3})
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "answer" in data
+    assert len(data["answer"]) > 0
+    assert "sources" in data
+    assert len(data["sources"]) > 0
+    assert "policy" in data["sources"][0]["title"]

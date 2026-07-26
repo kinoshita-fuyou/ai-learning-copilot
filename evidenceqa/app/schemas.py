@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class DocumentOut(BaseModel):
@@ -32,3 +32,13 @@ class SearchHit(BaseModel):
     char_start: int
     char_end: int
     score: float
+
+
+class AskRequest(BaseModel):
+    question: str = Field(..., min_length=1, max_length=500)
+    top_k: int = Field(5, ge=1, le=20)
+
+
+class AskResponse(BaseModel):
+    answer: str
+    sources: list[SearchHit]

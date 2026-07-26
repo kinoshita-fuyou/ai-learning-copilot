@@ -16,7 +16,8 @@ from app.repository import (
     replace_document_chunks,
 )
 from app.retrieval import search_chunks
-from app.schemas import DocumentChunkOut, DocumentOut, SearchHit
+from app.answering import get_answer_provider
+from app.schemas import DocumentChunkOut, DocumentOut, SearchHit, AskRequest, AskResponse
 
 
 ALLOWED_EXTENSIONS = {".md", ".txt"}
@@ -39,6 +40,7 @@ app = FastAPI(
 )
 app.state.db_path = DB_PATH
 embedder = HashingEmbedder()
+answer_provider = get_answer_provider()
 
 
 @app.get("/health")
@@ -124,3 +126,15 @@ def api_delete_document(document_id: int) -> None:
     deleted = delete_document(document_id, app.state.db_path)
     if not deleted:
         raise HTTPException(status_code=404, detail="Document not found")
+
+@app.post("/ask", response_model=AskResponse)
+def api_ask(request: AskRequest) -> dict:
+    contexts = search_chunks(
+        query=request.question,
+        embedder=embedder,
+        top_k=request.top_k,
+        db_path=app.state.db_path,
+    )
+    result = answer_provider.answer(request.question, contexts)
+    return {"answer": result.answer, "sources": result.sources}
+
