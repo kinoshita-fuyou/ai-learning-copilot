@@ -42,3 +42,31 @@ class AskRequest(BaseModel):
 class AskResponse(BaseModel):
     answer: str
     sources: list[SearchHit]
+
+
+class EvalQueryItem(BaseModel):
+    question: str = Field(..., min_length=1, max_length=500)
+    relevant_document_title: str = Field(..., min_length=1, max_length=200)
+
+
+class EvalHitShort(BaseModel):
+    title: str
+    score: float
+
+
+class EvalDetailOut(BaseModel):
+    question: str
+    expected: str
+    recalled: bool
+    rr: float
+    hits: list[EvalHitShort]
+    latency_ms: float
+
+
+class EvalResultOut(BaseModel):
+    recall_at_k: float
+    mrr: float
+    avg_latency_ms: float
+    total_queries: int
+    k: int
+    details: list[EvalDetailOut]

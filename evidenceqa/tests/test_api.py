@@ -108,3 +108,25 @@ def test_ask_returns_answer_with_sources(tmp_path: Path) -> None:
     assert "sources" in data
     assert len(data["sources"]) > 0
     assert "policy" in data["sources"][0]["title"]
+
+
+def test_eval_endpoint_reports_metrics(tmp_path: Path) -> None:
+    client = make_client(tmp_path)
+    client.post(
+        "/documents/upload",
+        files={"file": ("policy.md", "远程办公需提前一周申请。差旅报销发票三十天内提交。".encode(), "text/markdown")},
+    )
+
+    queries = [
+        {"question": "远程办公申请流程", "relevant_document_title": "policy"},
+        {"question": "报销提交期限", "relevant_document_title": "policy"},
+    ]
+    response = client.post(f"/eval/retrieval?k=3", json=queries)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total_queries"] == 2
+    assert data["recall_at_k"] >= 0.5
+    assert data["mrr"] >= 0.5
+    assert data["avg_latency_ms"] > 0
+    assert len(data["details"]) == 2

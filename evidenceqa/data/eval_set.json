@@ -1,0 +1,10 @@
+[
+  {"question": "远程办公需要提前多久申请", "relevant_document_title": "demo_policy"},
+  {"question": "差旅发票的提交期限是多少天", "relevant_document_title": "demo_policy"},
+  {"question": "公司 Wi-Fi 密码多久更换一次", "relevant_document_title": "demo_policy"},
+  {"question": "病假需要提供什么证明", "relevant_document_title": "demo_policy"},
+  {"question": "客户信息可以通过什么方式传输", "relevant_document_title": "demo_policy"},
+  {"question": "员工每日签到截止时间是什么", "relevant_document_title": "demo_policy"},
+  {"question": "超过五百元的报销需要额外附上什么", "relevant_document_title": "demo_policy"},
+  {"question": "年假额度如何计算", "relevant_document_title": "demo_policy"}
+]

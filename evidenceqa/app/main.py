@@ -17,7 +17,12 @@ from app.repository import (
 )
 from app.retrieval import search_chunks
 from app.answering import get_answer_provider
-from app.schemas import DocumentChunkOut, DocumentOut, SearchHit, AskRequest, AskResponse
+from app.evaluation import run_retrieval_eval, EvalQuery
+from app.schemas import (
+    DocumentChunkOut, DocumentOut, SearchHit,
+    AskRequest, AskResponse, EvalQueryItem, EvalResultOut,
+    EvalDetailOut, EvalHitShort,
+)
 
 
 ALLOWED_EXTENSIONS = {".md", ".txt"}
@@ -137,4 +142,25 @@ def api_ask(request: AskRequest) -> dict:
     )
     result = answer_provider.answer(request.question, contexts)
     return {"answer": result.answer, "sources": result.sources}
+
+@app.post("/eval/retrieval", response_model=EvalResultOut)
+def api_eval_retrieval(
+    queries: list[EvalQueryItem],
+    k: int = Query(5, ge=1, le=20),
+) -> dict:
+    eval_queries = [EvalQuery(question=q.question, relevant_document_title=q.relevant_document_title) for q in queries]
+    metrics = run_retrieval_eval(
+        eval_queries=eval_queries,
+        embedder=embedder,
+        k=k,
+        db_path=app.state.db_path,
+    )
+    return {
+        "recall_at_k": metrics.recall_at_k,
+        "mrr": metrics.mrr,
+        "avg_latency_ms": metrics.avg_latency_ms,
+        "total_queries": metrics.total_queries,
+        "k": metrics.k,
+        "details": metrics.details,
+    }
 

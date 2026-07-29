@@ -6,7 +6,7 @@ EvidenceQA 的目标不是做一个只会聊天的页面，而是让回答能回
 
 ## 当前进度
 
-### 已完成：文档接入、切分、检索与 RAG 问答
+### 已完成：文档接入、切分、检索、RAG 问答与评测
 
 - FastAPI 服务与自动化接口文档
 - Markdown / TXT 上传，UTF-8 编码、空文件、文件类型与 1 MB 大小校验
@@ -17,13 +17,14 @@ EvidenceQA 的目标不是做一个只会聊天的页面，而是让回答能回
 - 本地确定性 Embedding（特征哈希，免 API Key，接口与云端 Embedding 一致可替换）
 - 余弦相似度 Top-K 检索接口 `/search`，返回 chunk 来源与字符范围
 - RAG 问答接口 `/ask`：检索相关 chunk 后生成带引用来源的回答
+- 检索评测模块：Recall@K、MRR、延迟测量，支持自定义评测集
 - 支持本地模板回答与 OpenAI 兼容 LLM（通过环境变量切换）
 - Pytest 接口测试
 
 ### 即将完成
 
-1. 检索评测集、延迟和质量指标
-2. 简洁 Web 控制台、Docker 与演示数据
+1. 简洁 Web 控制台与 Docker 部署
+2. 演示数据与面试准备材料
 
 ## 架构
 
@@ -43,6 +44,7 @@ Document upload -> SQLite document store -> chunk pipeline -> vector retrieval
 | GET | `/documents/{document_id}/chunks` | 查看清洗后的切分结果 |
 | GET | `/search?q=...&top_k=5` | 向量检索最相关 chunk，含来源与字符范围 |
 | POST | `/ask` | RAG 问答，返回生成的回答与引用来源 |
+| POST | `/eval/retrieval` | 检索评测：传入评测集，返回 Recall@K、MRR 与延迟 |
 | DELETE | `/documents/{document_id}` | 删除文档 |
 
 启动后可访问 `http://127.0.0.1:8001/docs` 直接试用接口。
