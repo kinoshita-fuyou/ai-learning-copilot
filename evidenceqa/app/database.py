@@ -1,9 +1,10 @@
+import os
 from pathlib import Path
 import sqlite3
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-DB_PATH = BASE_DIR / "evidenceqa.db"
+DB_PATH = Path(os.getenv("EVIDENCEQA_DB_PATH", str(BASE_DIR / "evidenceqa.db")))
 
 
 def get_connection(db_path: Path | None = None) -> sqlite3.Connection:

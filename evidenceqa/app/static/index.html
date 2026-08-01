@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EvidenceQA · 可追溯知识库问答</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">E</span>
+      <div>
+        <h1>EvidenceQA</h1>
+        <p class="tagline">可追溯的企业知识库问答 · 检索 + 引用溯源</p>
+      </div>
+    </div>
+    <div class="health" id="health" title="后端服务健康状态">
+      <span class="dot" id="healthDot"></span>
+      <span id="healthText">连接中…</span>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="功能切换">
+    <button class="tab active" data-tab="documents">文档库</button>
+    <button class="tab" data-tab="ask">问答</button>
+    <button class="tab" data-tab="search">检索</button>
+    <button class="tab" data-tab="eval">评测</button>
+  </nav>
+
+  <main>
+    <!-- 文档库 -->
+    <section id="panel-documents" class="panel active">
+      <div class="card">
+        <h2>上传文档</h2>
+        <div class="dropzone" id="dropzone">
+          <p class="dz-text">拖拽 <code>.md</code> / <code>.txt</code> 文件到这里，或</p>
+          <label class="btn">
+            选择文件
+            <input type="file" id="fileInput" accept=".md,.txt" hidden>
+          </label>
+          <p class="hint">单个文件 ≤ 1 MB · UTF-8 编码</p>
+        </div>
+        <div id="uploadError" class="error hidden"></div>
+      </div>
+
+      <div class="card">
+        <h2>文档列表 <span class="badge" id="docCount">0</span></h2>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>标题</th>
+                <th>来源</th>
+                <th>大小</th>
+                <th>切块</th>
+                <th>上传时间</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="docBody"></tbody>
+          </table>
+        </div>
+        <p id="docEmpty" class="empty hidden">暂无文档，先上传一份制度文件试试。</p>
+      </div>
+    </section>
+
+    <!-- 问答 -->
+    <section id="panel-ask" class="panel">
+      <div class="card">
+        <h2>向知识库提问</h2>
+        <div class="ask-row">
+          <input id="askInput" type="text" maxlength="500"
+                 placeholder="例如：远程办公需要提前多久申请？" autocomplete="off">
+          <select id="askTopK" aria-label="引用数量">
+            <option value="3">3 条</option>
+            <option value="5" selected>5 条</option>
+            <option value="10">10 条</option>
+          </select>
+          <button class="btn primary" id="askBtn">提问</button>
+        </div>
+        <div id="askError" class="error hidden"></div>
+        <div id="askResult" class="hidden">
+          <h3>回答</h3>
+          <div class="answer-box" id="answerText"></div>
+          <h3>引用来源 <span class="hint">（Top-K 检索到的原文片段）</span></h3>
+          <div id="askSources" class="sources"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 检索 -->
+    <section id="panel-search" class="panel">
+      <div class="card">
+        <h2>向量检索</h2>
+        <div class="ask-row">
+          <input id="searchInput" type="text" maxlength="500"
+                 placeholder="例如：发票报销期限是几天？" autocomplete="off">
+          <select id="searchTopK" aria-label="返回数量">
+            <option value="3">3 条</option>
+            <option value="5" selected>5 条</option>
+            <option value="10">10 条</option>
+          </select>
+          <button class="btn primary" id="searchBtn">检索</button>
+        </div>
+        <div id="searchError" class="error hidden"></div>
+        <div id="searchResult" class="hidden">
+          <h3>命中结果 <span class="hint" id="searchMeta"></span></h3>
+          <div id="searchHits" class="sources"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 评测 -->
+    <section id="panel-eval" class="panel">
+      <div class="card">
+        <h2>检索评测</h2>
+        <p class="lead">
+          使用内置评测集（8 道企业场景问题）运行 Recall@K、MRR 与平均延迟指标，
+          验证检索质量并量化接口性能。
+        </p>
+        <button class="btn primary" id="evalBtn">运行内置评测集</button>
+        <div id="evalError" class="error hidden"></div>
+
+        <div id="evalResult" class="hidden">
+          <div class="metrics">
+            <div class="metric">
+              <span class="metric-value" id="metricRecall">-</span>
+              <span class="metric-label">Recall@K</span>
+            </div>
+            <div class="metric">
+              <span class="metric-value" id="metricMrr">-</span>
+              <span class="metric-label">MRR</span>
+            </div>
+            <div class="metric">
+              <span class="metric-value" id="metricLatency">-</span>
+              <span class="metric-label">平均延迟 (ms)</span>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>问题</th>
+                  <th>目标文档</th>
+                  <th>命中</th>
+                  <th>RR</th>
+                  <th>Top-3 命中</th>
+                  <th>延迟</th>
+                </tr>
+              </thead>
+              <tbody id="evalBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    本地确定性 Embedding · 无需 API Key · 可切换 OpenAI 兼容 LLM
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

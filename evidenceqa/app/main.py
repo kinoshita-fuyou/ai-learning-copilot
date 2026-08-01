@@ -1,7 +1,10 @@
 from contextlib import asynccontextmanager
+import json
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile, status
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.chunking import chunk_text, normalize_text
 from app.database import DB_PATH, init_db
@@ -27,6 +30,8 @@ from app.schemas import (
 
 ALLOWED_EXTENSIONS = {".md", ".txt"}
 MAX_DOCUMENT_BYTES = 1_000_000
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+EVAL_SET_PATH = Path(__file__).resolve().parent.parent / "data" / "eval_set.json"
 
 
 @asynccontextmanager
@@ -39,8 +44,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="EvidenceQA API",
-    description="可追溯企业知识库问答系统的后端服务。",
-    version="0.3.0",
+    description="可追溯企业知识库问答系统，包含文档接入、检索、RAG 问答与评测。",
+    version="0.4.0",
     lifespan=lifespan,
 )
 app.state.db_path = DB_PATH
@@ -51,6 +56,17 @@ answer_provider = get_answer_provider()
 @app.get("/health")
 def health_check() -> dict:
     return {"status": "ok", "service": "evidenceqa-api"}
+
+
+@app.get("/", include_in_schema=False)
+def web_console() -> FileResponse:
+    return FileResponse(STATIC_DIR / "index.html")
+
+
+@app.get("/eval/demo", response_model=list[EvalQueryItem])
+def api_eval_demo_set() -> list[dict]:
+    with open(EVAL_SET_PATH, encoding="utf-8") as handle:
+        return json.load(handle)
 
 
 @app.post("/documents/upload", response_model=DocumentOut, status_code=status.HTTP_201_CREATED)
@@ -164,3 +180,5 @@ def api_eval_retrieval(
         "details": metrics.details,
     }
 
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

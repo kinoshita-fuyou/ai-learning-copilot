@@ -6,7 +6,7 @@ EvidenceQA 的目标不是做一个只会聊天的页面，而是让回答能回
 
 ## 当前进度
 
-### 已完成：文档接入、切分、检索、RAG 问答与评测
+### 已完成：文档接入、切分、检索、RAG 问答、评测与 Web 控制台
 
 - FastAPI 服务与自动化接口文档
 - Markdown / TXT 上传，UTF-8 编码、空文件、文件类型与 1 MB 大小校验
@@ -19,12 +19,13 @@ EvidenceQA 的目标不是做一个只会聊天的页面，而是让回答能回
 - RAG 问答接口 `/ask`：检索相关 chunk 后生成带引用来源的回答
 - 检索评测模块：Recall@K、MRR、延迟测量，支持自定义评测集
 - 支持本地模板回答与 OpenAI 兼容 LLM（通过环境变量切换）
+- 简洁 Web 控制台：文档上传、问答、检索、评测四合一界面，开箱即用
+- Docker 部署：单命令启动，数据目录可持久化
 - Pytest 接口测试
 
 ### 即将完成
 
-1. 简洁 Web 控制台与 Docker 部署
-2. 演示数据与面试准备材料
+1. 演示数据与面试准备材料
 
 ## 架构
 
@@ -37,6 +38,7 @@ Document upload -> SQLite document store -> chunk pipeline -> vector retrieval
 
 | Method | Path | Description |
 | --- | --- | --- |
+| GET | `/` | Web 控制台（上传、问答、检索、评测） |
 | GET | `/health` | 健康检查 |
 | POST | `/documents/upload` | 上传 `.md` 或 `.txt` 文档 |
 | GET | `/documents` | 查看文档列表 |
@@ -44,10 +46,11 @@ Document upload -> SQLite document store -> chunk pipeline -> vector retrieval
 | GET | `/documents/{document_id}/chunks` | 查看清洗后的切分结果 |
 | GET | `/search?q=...&top_k=5` | 向量检索最相关 chunk，含来源与字符范围 |
 | POST | `/ask` | RAG 问答，返回生成的回答与引用来源 |
+| GET | `/eval/demo` | 内置演示评测集 |
 | POST | `/eval/retrieval` | 检索评测：传入评测集，返回 Recall@K、MRR 与延迟 |
 | DELETE | `/documents/{document_id}` | 删除文档 |
 
-启动后可访问 `http://127.0.0.1:8001/docs` 直接试用接口。
+启动后访问 `http://127.0.0.1:8001` 使用 Web 控制台，或访问 `/docs` 直接试用接口。
 
 ## 本地运行
 
@@ -64,6 +67,15 @@ pip install -r requirements.txt
 ```bash
 ./scripts/test.sh
 ```
+
+## Docker 运行
+
+```bash
+docker compose up --build
+```
+
+启动后访问 `http://127.0.0.1:8001`。数据库存放在 Docker 命名卷 `evidenceqa-data` 中，
+删除容器不会丢失数据。也可通过环境变量 `EVIDENCEQA_DB_PATH` 指定数据库文件位置。
 
 ## 十天作品集计划
 
