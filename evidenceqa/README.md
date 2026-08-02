@@ -21,11 +21,28 @@ EvidenceQA 的目标不是做一个只会聊天的页面，而是让回答能回
 - 支持本地模板回答与 OpenAI 兼容 LLM（通过环境变量切换）
 - 简洁 Web 控制台：文档上传、问答、检索、评测四合一界面，开箱即用
 - Docker 部署：单命令启动，数据目录可持久化
+- 演示语料：3 份跨领域文档 + 20 道评测题，覆盖多文档检索场景
+- 一键演示：`scripts/demo.sh` 重建演示库并启动服务
+- 面试材料：项目概述、面试 Q&A、5 分钟演示脚本、学习路径
 - Pytest 接口测试
 
 ### 即将完成
 
-1. 演示数据与面试准备材料
+1. EvidenceQA 最终收尾（README 终稿、简历条目、自检清单）
+2. ReportFlow Agent（Day 9-10 补充项目）
+
+## 演示与面试材料
+
+| 文件 | 内容 |
+| --- | --- |
+| [data/demo_policy.md](data/demo_policy.md) | 企业制度：远程办公、报销、IT、考勤、数据安全 |
+| [data/demo_product_manual.md](data/demo_product_manual.md) | 产品手册：云盘上传、共享、版本、审计 |
+| [data/demo_engineering_guide.md](data/demo_engineering_guide.md) | 研发规范：分支、测试、灰度发布、应急 |
+| [data/eval_set.json](data/eval_set.json) | 20 道跨文档检索评测题 |
+| [interview/01-project-overview.md](interview/01-project-overview.md) | 项目概述、架构、简历描述模板 |
+| [interview/02-interview-qa.md](interview/02-interview-qa.md) | 17 道面试 Q&A（含追问预案） |
+| [interview/03-demo-script.md](interview/03-demo-script.md) | 5 分钟现场演示脚本 |
+| [interview/04-learning-path.md](interview/04-learning-path.md) | 8 周学习路径与简历策略 |
 
 ## 架构
 
@@ -60,6 +77,12 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ./scripts/start.sh
+```
+
+面试演示（重建演示库 + 启动 + 打开浏览器）：
+
+```bash
+./scripts/demo.sh
 ```
 
 运行测试：
