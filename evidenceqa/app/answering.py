@@ -42,7 +42,7 @@ class LLMAnswerer:
     def __init__(self, api_key: str, base_url: str | None = None, model: str = "gpt-3.5-turbo"):
         from openai import OpenAI
 
-        self.client = OpenAI(api_key=api_key, base_url=base_url)
+        self.client = OpenAI(api_key=api_key, base_url=base_url, timeout=15.0)
         self.model = model
 
     def answer(self, question: str, contexts: list[dict]) -> AnswerResult:
@@ -72,11 +72,32 @@ class LLMAnswerer:
 
 
 def get_answer_provider() -> AnswerProvider:
-    """Select answer provider based on environment configuration."""
+    """Select the answer provider based on environment configuration.
+
+    ``EVIDENCEQA_ANSWER_PROVIDER`` overrides auto-detection:
+
+    - ``template``: always use the offline template answerer
+    - ``llm``: always use the LLM answerer (requires ``OPENAI_API_KEY``)
+    - ``auto`` (default): use LLM when ``OPENAI_API_KEY`` is set, otherwise template
+    """
+    override = os.getenv("EVIDENCEQA_ANSWER_PROVIDER", "auto").strip().lower()
     api_key = os.getenv("OPENAI_API_KEY")
     base_url = os.getenv("OPENAI_BASE_URL")
     model = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
 
+    if override == "template":
+        return TemplateAnswerer()
+    if override == "llm":
+        if not api_key:
+            raise RuntimeError(
+                "EVIDENCEQA_ANSWER_PROVIDER=llm requires OPENAI_API_KEY to be set."
+            )
+        return LLMAnswerer(api_key=api_key, base_url=base_url, model=model)
+    if override != "auto":
+        raise RuntimeError(
+            f"Unknown EVIDENCEQA_ANSWER_PROVIDER: {override!r} "
+            "(expected template, llm or auto)."
+        )
     if api_key:
         return LLMAnswerer(api_key=api_key, base_url=base_url, model=model)
     return TemplateAnswerer()

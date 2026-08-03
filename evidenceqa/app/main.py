@@ -43,9 +43,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="EvidenceQA API",
+    title="EvidenceQA",
     description="可追溯企业知识库问答系统，包含文档接入、检索、RAG 问答与评测。",
-    version="0.4.0",
+    version="1.0.0",
     lifespan=lifespan,
 )
 app.state.db_path = DB_PATH
@@ -156,7 +156,13 @@ def api_ask(request: AskRequest) -> dict:
         top_k=request.top_k,
         db_path=app.state.db_path,
     )
-    result = answer_provider.answer(request.question, contexts)
+    try:
+        result = answer_provider.answer(request.question, contexts)
+    except Exception as error:  # provider boundary: network, auth, provider errors
+        raise HTTPException(
+            status_code=502,
+            detail=f"Answer provider unavailable: {error}",
+        ) from error
     return {"answer": result.answer, "sources": result.sources}
 
 @app.post("/eval/retrieval", response_model=EvalResultOut)

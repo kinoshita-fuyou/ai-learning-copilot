@@ -4,32 +4,27 @@
 
 EvidenceQA 的目标不是做一个只会聊天的页面，而是让回答能回到原始资料：管理员上传制度、产品手册或操作规范，系统完成解析、检索、生成和引用溯源。项目刻意覆盖 AI 应用开发岗位常见的 RAG、后端服务、评测和部署能力。
 
-## 当前进度
+## 状态
 
-### 已完成：文档接入、切分、检索、RAG 问答、评测与 Web 控制台
+**已完成（v1.0.0）**：文档接入 → 切分 → 向量检索 → RAG 问答 → 评测 → Web 控制台
+→ Docker 部署全链路。26 个自动化测试全绿，GitHub Actions CI 持续回归。
+下一阶段：ReportFlow Agent（Day 9-10 补充项目）。
 
-- FastAPI 服务与自动化接口文档
-- Markdown / TXT 上传，UTF-8 编码、空文件、文件类型与 1 MB 大小校验
-- SQLite 文档元数据与正文持久化
-- 文档列表、详情查询、删除接口
-- 段落优先的文本清洗与切分，保留 chunk 字符范围和重叠上下文
-- Chunk 预览接口，便于排查后续检索效果
-- 本地确定性 Embedding（特征哈希，免 API Key，接口与云端 Embedding 一致可替换）
-- 余弦相似度 Top-K 检索接口 `/search`，返回 chunk 来源与字符范围
-- RAG 问答接口 `/ask`：检索相关 chunk 后生成带引用来源的回答
-- 检索评测模块：Recall@K、MRR、延迟测量，支持自定义评测集
-- 支持本地模板回答与 OpenAI 兼容 LLM（通过环境变量切换）
-- 简洁 Web 控制台：文档上传、问答、检索、评测四合一界面，开箱即用
-- Docker 部署：单命令启动，数据目录可持久化
-- 演示语料：3 份跨领域文档 + 20 道评测题，覆盖多文档检索场景
-- 一键演示：`scripts/demo.sh` 重建演示库并启动服务
-- 面试材料：项目概述、面试 Q&A、5 分钟演示脚本、学习路径
-- Pytest 接口测试
+## 功能特性
 
-### 即将完成
-
-1. EvidenceQA 最终收尾（README 终稿、简历条目、自检清单）
-2. ReportFlow Agent（Day 9-10 补充项目）
+- FastAPI 服务与自动化接口文档（`/docs`）
+- Markdown / TXT 上传，扩展名、UTF-8 编码、空文件、1 MB 大小四重校验
+- SQLite 持久化：文档正文、切块、embedding 分层存储，自动迁移回填
+- 段落优先切分：保留 chunk 字符范围与重叠上下文，引用可精确溯源
+- 本地确定性 Embedding（特征哈希 + CJK 双字元），免 API Key，接口与云端一致可替换
+- 余弦相似度 Top-K 检索，返回来源文档、片段号与相关度分数
+- RAG 问答 `/ask`：回答附带引用来源；支持离线模板与 OpenAI 兼容 LLM 双 Provider
+- 检索评测：Recall@K、MRR、平均延迟，内置 20 道跨文档评测题
+- 简洁 Web 控制台：文档库 / 问答 / 检索 / 评测四页签，纯原生前端零依赖
+- Docker Compose 一键部署，命名卷持久化 + 健康检查
+- 一键演示 `scripts/demo.sh`：重建演示库 → 启动 → 打开浏览器
+- 面试材料：项目概述、Q&A、演示脚本、学习路径、简历条目、上线自检清单
+- Pytest 测试套件 + GitHub Actions CI
 
 ## 演示与面试材料
 
@@ -43,6 +38,8 @@ EvidenceQA 的目标不是做一个只会聊天的页面，而是让回答能回
 | [interview/02-interview-qa.md](interview/02-interview-qa.md) | 17 道面试 Q&A（含追问预案） |
 | [interview/03-demo-script.md](interview/03-demo-script.md) | 5 分钟现场演示脚本 |
 | [interview/04-learning-path.md](interview/04-learning-path.md) | 8 周学习路径与简历策略 |
+| [interview/05-resume.md](interview/05-resume.md) | 简历条目定稿（中英双版） |
+| [interview/06-launch-checklist.md](interview/06-launch-checklist.md) | 上线 / 面试自检清单 |
 
 ## 架构
 
@@ -68,6 +65,18 @@ Document upload -> SQLite document store -> chunk pipeline -> vector retrieval
 | DELETE | `/documents/{document_id}` | 删除文档 |
 
 启动后访问 `http://127.0.0.1:8001` 使用 Web 控制台，或访问 `/docs` 直接试用接口。
+
+## 配置
+
+| 环境变量 | 默认 | 说明 |
+| --- | --- | --- |
+| `EVIDENCEQA_DB_PATH` | `./evidenceqa.db` | SQLite 数据库文件位置 |
+| `EVIDENCEQA_ANSWER_PROVIDER` | `auto` | `template` / `llm` / `auto`；测试与演示默认强制 `template` |
+| `OPENAI_API_KEY` | 无 | 设置后 `auto` 模式启用 LLM 回答 |
+| `OPENAI_BASE_URL` | 无 | OpenAI 兼容 API 地址（可接中转/本地模型） |
+| `OPENAI_MODEL` | `gpt-3.5-turbo` | LLM 模型名 |
+
+LLM 调用失败时 `/ask` 返回 502 并携带原因，不会静默返回错误答案。
 
 ## 本地运行
 
@@ -99,6 +108,37 @@ docker compose up --build
 
 启动后访问 `http://127.0.0.1:8001`。数据库存放在 Docker 命名卷 `evidenceqa-data` 中，
 删除容器不会丢失数据。也可通过环境变量 `EVIDENCEQA_DB_PATH` 指定数据库文件位置。
+
+## 项目结构
+
+```text
+evidenceqa/
+├── app/                  # 后端源码
+│   ├── main.py           # FastAPI 路由与启动
+│   ├── chunking.py       # 清洗与切分
+│   ├── embeddings.py     # 本地确定性 Embedding
+│   ├── retrieval.py      # Top-K 检索
+│   ├── answering.py      # 模板 / LLM 双 Provider
+│   ├── evaluation.py     # Recall@K / MRR / 延迟评测
+│   ├── repository.py     # SQLite 数据访问
+│   └── static/           # Web 控制台（原生 HTML/CSS/JS）
+├── data/                 # 演示文档与评测集
+├── interview/            # 面试材料
+├── scripts/              # 启动 / 测试 / 一键演示
+├── tests/                # 26 个 pytest 用例
+├── Dockerfile
+└── docker-compose.yml
+```
+
+## 测试与 CI
+
+```bash
+./scripts/test.sh
+```
+
+- 26 个用例覆盖切分、Embedding、检索、问答、评测、错误处理与 UI
+- 测试通过 `EVIDENCEQA_ANSWER_PROVIDER=template` 强制离线，与开发机环境无关
+- 每次 push 由 GitHub Actions 自动回归（`.github/workflows/ci.yml`）
 
 ## 十天作品集计划
 

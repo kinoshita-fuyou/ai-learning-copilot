@@ -20,8 +20,8 @@ EvidenceQA 是一个可追溯的企业知识库问答系统：上传文档后自
 | 存储 | SQLite | 文档正文 / 切块 / embedding 分表存储，零部署成本 |
 | 检索 | 特征哈希 Embedding + 余弦相似度 | 免 API Key、确定性、可复现 |
 | 回答 | Template / LLM 双 Provider | 接口一致，环境变量切换 |
-| 测试 | pytest + TestClient | 18 个用例覆盖接口、切分、检索、评测、UI |
-| 部署 | Docker Compose | 命名卷持久化 + 健康检查 |
+| 测试 | pytest + TestClient | 26 个用例覆盖接口、切分、检索、问答、评测、UI |
+| 部署 | Docker Compose + GitHub Actions | 命名卷持久化、健康检查、push 自动回归 |
 
 ## 核心能力
 
@@ -65,7 +65,7 @@ flowchart LR
 - 内置评测集 20 题：Recall@K = 1.0，MRR = 1.0，平均检索延迟约 0.4 ms
   （说明口径：本地特征哈希 + 3 份小语料，是基线而非生产指标；换真实 Embedding
   和更大语料后需要重新评测）
-- 18 个自动化测试全绿，测试运行 < 1 秒
+- 26 个自动化测试全绿，GitHub Actions CI 自动回归
 
 ## 简历描述模板
 
@@ -75,7 +75,7 @@ flowchart LR
 > - 独立完成文档接入、切分、向量检索、RAG 问答、检索评测全链路，支持引用溯源
 > - 实现免 API Key 的确定性 Embedding 与余弦 Top-K 检索，接真实 LLM 仅需改 Provider
 > - 建立 Recall@K / MRR / 延迟评测体系，内置 20 道跨文档评测题（Recall@K=1.0）
-> - 提供原生 Web 控制台与 Docker 部署，一键演示，18 个自动化测试全绿
+> - 提供原生 Web 控制台与 Docker 部署，一键演示，26 个自动化测试全绿，CI 自动回归
 
 **一段话版：**
 

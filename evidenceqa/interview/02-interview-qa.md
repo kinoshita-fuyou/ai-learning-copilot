@@ -73,9 +73,12 @@ pdfplumber / PyMuPDF 抽文本），输出仍是一段字符串，后续管线�
 
 **Q10：模板回答和 LLM 回答怎么切换？为什么做成 Provider？**
 
-`get_answer_provider()` 读环境变量：有 `OPENAI_API_KEY` 就用 LLM，否则用本地
-模板。两者实现同一个 `AnswerProvider` 协议，`/ask` 不感知具体实现。好处是：
-测试不依赖外网；面试现场没 Key 也能完整演示；接新模型只加一个类。
+`get_answer_provider()` 支持三种模式：`EVIDENCEQA_ANSWER_PROVIDER=template`
+强制离线模板、`llm` 强制 LLM、`auto` 按是否有 `OPENAI_API_KEY` 自动选择
+（默认）。两者实现同一个 `AnswerProvider` 协议，`/ask` 不感知具体实现。
+好处是：测试和演示强制 `template`，与开发机环境完全隔离、断网可跑；
+接新模型只加一个类；LLM 调用失败时 `/ask` 返回 502 并说明原因，而不是
+静默出错。
 
 **Q11：怎么防 LLM 幻觉？**
 
@@ -108,14 +111,17 @@ pdfplumber / PyMuPDF 抽文本），输出仍是一段字符串，后续管线�
 **Q15：测试策略？**
 
 pytest + TestClient，每个测试用临时 SQLite 隔离数据。分层：切分/embedding 单测、
-接口测试（上传、检索、问答、评测）、UI 测试（静态资源、控制台渲染、演示库
-可检索）。共 18 个用例，跑一遍不到 1 秒，任何改动都能快速回归。
+接口测试（上传、检索、问答、评测、错误处理）、UI 测试（静态资源、控制台渲染、
+演示库可检索）。conftest 里强制 `EVIDENCEQA_ANSWER_PROVIDER=template`，所以
+测试与开发机上的 API Key 无关，任何环境结果一致。共 26 个用例，跑一遍几秒，
+CI 在每次 push 自动回归。
 
 **Q16：怎么部署？**
 
 Docker Compose：`docker compose up --build` 一条命令。数据库路径由
 `EVIDENCEQA_DB_PATH` 配置，挂命名卷持久化，容器删除不丢数据；加 healthcheck
-轮询 `/health`。本地开发用 uvicorn `--reload`。
+轮询 `/health`。回答 Provider、模型和 Key 都走环境变量，同一镜像在不同环境
+只改配置不改代码。本地开发用 uvicorn `--reload`。
 
 **Q17：如果给你两周，你会怎么改进这个项目？**
 
