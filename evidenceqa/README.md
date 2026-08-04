@@ -8,7 +8,8 @@ EvidenceQA 的目标不是做一个只会聊天的页面，而是让回答能回
 
 **已完成（v1.0.0）**：文档接入 → 切分 → 向量检索 → RAG 问答 → 评测 → Web 控制台
 → Docker 部署全链路。26 个自动化测试全绿，GitHub Actions CI 持续回归。
-下一阶段：ReportFlow Agent（Day 9-10 补充项目）。
+同仓库的补充项目 [ReportFlow Agent](../reportflow/README.md)（结构化输出 +
+工具调用 + 失败降级）也已交付，20 个自动化测试全绿。十天作品集全部完成。
 
 ## 功能特性
 

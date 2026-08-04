@@ -58,6 +58,6 @@
 
 ## 十天计划剩余部分
 
-- Day 8：EvidenceQA 收尾（README 终稿、简历条目、自检清单）
-- Day 9-10：ReportFlow Agent（工具调用 + 结构化输出 + 失败处理），
-  证明"不仅能做知识库，也能把 LLM 接进业务流程"
+- Day 8：EvidenceQA 收尾（已完成：README 终稿、简历条目、自检清单）
+- Day 9-10：ReportFlow Agent（已完成：工具调用 + 结构化输出 + 失败降级，
+  见 `../reportflow/`），证明"不仅能做知识库，也能把 LLM 接进业务流程"

@@ -3,16 +3,19 @@ name: CI
 on:
   push:
     branches: [main]
-    paths: ["evidenceqa/**"]
+    paths: ["evidenceqa/**", "reportflow/**"]
   pull_request:
-    paths: ["evidenceqa/**"]
+    paths: ["evidenceqa/**", "reportflow/**"]
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: [evidenceqa, reportflow]
     defaults:
       run:
-        working-directory: evidenceqa
+        working-directory: ${{ matrix.project }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -24,3 +27,4 @@ jobs:
         run: pytest -q
         env:
           EVIDENCEQA_ANSWER_PROVIDER: template
+          REPORTFLOW_AGENT: rule
