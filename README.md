@@ -41,6 +41,8 @@ GitHub Actions 在每次 push 时对两个项目并行回归（`.github/workflow
 ## 简历与面试材料
 
 - [简历（项目经历合并版）](resume.md)
+- [面试冲刺包](interview-sprint.md)（技术/行为面模拟题、反问清单、投递话术、
+  面试前一周每日计划）
 - [EvidenceQA 面试材料](evidenceqa/interview/)（概述、Q&A、演示脚本、学习路径、
   简历条目、自检清单）
 
