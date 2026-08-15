@@ -17,7 +17,7 @@ export EVIDENCEQA_ANSWER_PROVIDER="${EVIDENCEQA_ANSWER_PROVIDER:-template}"
 python scripts/seed_demo.py --db "$EVIDENCEQA_DB_PATH"
 
 echo "启动服务：http://127.0.0.1:8001"
-uvicorn app.main:app --host 127.0.0.1 --port 8001 &
+env -u PYTHONPATH uvicorn app.main:app --host 127.0.0.1 --port 8001 &
 SERVER_PID=$!
 trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
 

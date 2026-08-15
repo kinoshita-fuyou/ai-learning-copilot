@@ -82,9 +82,7 @@ LLM 模式下模型直接传参，两条路径共用同一执行器。
 
 ```bash
 cd reportflow
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+./scripts/setup.sh
 ./scripts/start.sh        # http://127.0.0.1:8002
 ```
 
@@ -99,6 +97,9 @@ pip install -r requirements.txt
 ```bash
 ./scripts/test.sh         # 20 个用例
 ```
+
+`setup.sh` 创建虚拟环境并安装依赖，内部隔离 `PYTHONPATH`，避免误用系统中其他
+Python 环境的包。
 
 ## 与 EvidenceQA 的关系
 

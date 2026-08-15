@@ -31,12 +31,13 @@ cd reportflow && ./scripts/demo.sh
 ## 测试与 CI
 
 ```bash
-cd evidenceqa && ./scripts/test.sh    # 26 个用例
-cd reportflow && ./scripts/test.sh    # 20 个用例
+./check.sh                            # 一键跑两个项目（46 个用例）
 ```
 
 GitHub Actions 在每次 push 时对两个项目并行回归（`.github/workflows/ci.yml`），
 测试通过环境变量强制离线，结果与开发机环境无关。
+
+首次拉取代码后，每个项目执行 `./scripts/setup.sh` 即可完成环境准备。
 
 ## 简历与面试材料
 

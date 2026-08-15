@@ -83,9 +83,7 @@ LLM 调用失败时 `/ask` 返回 502 并携带原因，不会静默返回错误
 
 ```bash
 cd evidenceqa
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+./scripts/setup.sh
 ./scripts/start.sh
 ```
 
@@ -100,6 +98,10 @@ pip install -r requirements.txt
 ```bash
 ./scripts/test.sh
 ```
+
+`setup.sh` 会创建虚拟环境并安装依赖；脚本内部隔离了 `PYTHONPATH`，避免误用
+系统中其他 Python 环境的包（若手动创建环境，请同样使用
+`env -u PYTHONPATH pip install -r requirements.txt`）。
 
 ## Docker 运行
 

@@ -13,7 +13,7 @@ source .venv/bin/activate
 export REPORTFLOW_AGENT="${REPORTFLOW_AGENT:-rule}"
 
 echo "启动服务：http://127.0.0.1:8002"
-uvicorn app.main:app --host 127.0.0.1 --port 8002 &
+env -u PYTHONPATH uvicorn app.main:app --host 127.0.0.1 --port 8002 &
 SERVER_PID=$!
 trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
 
