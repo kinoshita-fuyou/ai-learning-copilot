@@ -8,6 +8,8 @@
 
 ![CI](https://github.com/kinoshita-fuyou/ai-learning-copilot/actions/workflows/ci.yml/badge.svg)
 
+[MIT License](LICENSE)
+
 ## 项目一览
 
 | 项目 | 定位 | 关键能力 | 验证 |

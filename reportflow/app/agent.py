@@ -9,7 +9,7 @@ report through a forced ``generate_report`` call.
 
 import json
 import os
-from typing import Protocol
+from typing import Callable, Protocol
 
 from app import data
 from app.schemas import Period, ReportDraft, ReportRequest, Section, Metric
@@ -23,7 +23,7 @@ def _period_args(period: Period) -> dict:
 class ReportAgent(Protocol):
     mode: str
 
-    def run(self, request: ReportRequest, execute_bulk: callable) -> tuple[ReportDraft, list]:
+    def run(self, request: ReportRequest, execute_bulk: Callable) -> tuple[ReportDraft, list]:
         ...
 
 
@@ -152,7 +152,7 @@ class RuleAgent:
         title = f"{request.task}（{period.start.isoformat()} ~ {period.end.isoformat()}）"
         return ReportDraft(title=title, summary=summary, sections=sections)
 
-    def run(self, request: ReportRequest, execute_bulk: callable) -> tuple[ReportDraft, list]:
+    def run(self, request: ReportRequest, execute_bulk: Callable) -> tuple[ReportDraft, list]:
         calls = self.plan(request)
         outputs, records = execute_bulk(calls)
         return self.generate(request, outputs), records
@@ -169,7 +169,7 @@ class LLMAgent:
         self.client = OpenAI(api_key=api_key, base_url=base_url, timeout=30.0)
         self.model = model
 
-    def run(self, request: ReportRequest, execute_bulk: callable) -> tuple[ReportDraft, list]:
+    def run(self, request: ReportRequest, execute_bulk: Callable) -> tuple[ReportDraft, list]:
         from openai import OpenAIError
         from pydantic import ValidationError
 

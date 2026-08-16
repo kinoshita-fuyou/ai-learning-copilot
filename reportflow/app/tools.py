@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import date
+from typing import Callable
 
 from app import data
 from app.schemas import Period, ToolCallRecord
@@ -16,8 +17,8 @@ class ToolSpec:
     name: str
     description: str
     parameters: dict
-    fn: callable
-    validator: callable | None = None
+    fn: Callable
+    validator: Callable | None = None
 
 
 def _query_sales(period: dict) -> list[dict]:
