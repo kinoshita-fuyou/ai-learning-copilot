@@ -19,6 +19,7 @@ from app.repository import (
     replace_document_chunks,
 )
 from app.retrieval import search_chunks
+from app.retrieval import hybrid_search_chunks
 from app.answering import get_answer_provider
 from app.evaluation import run_retrieval_eval, EvalQuery
 from app.schemas import (
@@ -45,7 +46,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="EvidenceQA",
     description="可追溯企业知识库问答系统，包含文档接入、检索、RAG 问答与评测。",
-    version="1.0.0",
+    version="1.1.0",
     lifespan=lifespan,
 )
 app.state.db_path = DB_PATH
@@ -118,7 +119,12 @@ async def upload_document(file: UploadFile = File(...)) -> dict:
 def api_search(
     q: str = Query(..., min_length=1, max_length=500),
     top_k: int = Query(5, ge=1, le=20),
+    hybrid: bool = Query(True, description="使用 BM25+向量混合检索（false 时仅向量检索）"),
 ) -> list[dict]:
+    if hybrid:
+        return hybrid_search_chunks(
+            query=q, embedder=embedder, top_k=top_k, db_path=app.state.db_path
+        )
     return search_chunks(query=q, embedder=embedder, top_k=top_k, db_path=app.state.db_path)
 
 
@@ -150,7 +156,7 @@ def api_delete_document(document_id: int) -> None:
 
 @app.post("/ask", response_model=AskResponse)
 def api_ask(request: AskRequest) -> dict:
-    contexts = search_chunks(
+    contexts = hybrid_search_chunks(
         query=request.question,
         embedder=embedder,
         top_k=request.top_k,
@@ -169,12 +175,14 @@ def api_ask(request: AskRequest) -> dict:
 def api_eval_retrieval(
     queries: list[EvalQueryItem],
     k: int = Query(5, ge=1, le=20),
+    mode: str = Query("hybrid", pattern="^(vector|hybrid)$"),
 ) -> dict:
     eval_queries = [EvalQuery(question=q.question, relevant_document_title=q.relevant_document_title) for q in queries]
     metrics = run_retrieval_eval(
         eval_queries=eval_queries,
         embedder=embedder,
         k=k,
+        mode=mode,
         db_path=app.state.db_path,
     )
     return {
@@ -183,6 +191,7 @@ def api_eval_retrieval(
         "avg_latency_ms": metrics.avg_latency_ms,
         "total_queries": metrics.total_queries,
         "k": metrics.k,
+        "mode": mode,
         "details": metrics.details,
     }
 

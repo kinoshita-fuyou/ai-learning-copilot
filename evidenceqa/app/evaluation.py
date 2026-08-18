@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from app.embeddings import HashingEmbedder
-from app.retrieval import search_chunks
+from app.retrieval import hybrid_search_chunks, search_chunks
 
 
 @dataclass
@@ -34,8 +34,10 @@ def run_retrieval_eval(
     eval_queries: list[EvalQuery],
     embedder: HashingEmbedder,
     k: int = 5,
+    mode: str = "hybrid",
     db_path: Path | None = None,
 ) -> EvalMetrics:
+    search = hybrid_search_chunks if mode == "hybrid" else search_chunks
     total = len(eval_queries)
     if total == 0:
         return EvalMetrics(
@@ -50,7 +52,7 @@ def run_retrieval_eval(
 
     for q in eval_queries:
         start = time.perf_counter()
-        hits = search_chunks(query=q.question, embedder=embedder, top_k=k, db_path=db_path)
+        hits = search(query=q.question, embedder=embedder, top_k=k, db_path=db_path)
         elapsed = (time.perf_counter() - start) * 1000
         total_latency += elapsed
 

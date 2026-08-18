@@ -18,18 +18,18 @@ EvidenceQA 是一个可追溯的企业知识库问答系统：上传文档后自
 | 语言 | Python 3.14 | 类型注解贯穿全项目 |
 | Web 框架 | FastAPI | 自动 OpenAPI 文档、Pydantic 校验、依赖清晰 |
 | 存储 | SQLite | 文档正文 / 切块 / embedding 分表存储，零部署成本 |
-| 检索 | 特征哈希 Embedding + 余弦相似度 | 免 API Key、确定性、可复现 |
+| 检索 | 特征哈希 Embedding + BM25 混合检索 | 免 API Key、确定性、关键词与语义互补 |
 | 回答 | Template / LLM 双 Provider | 接口一致，环境变量切换 |
-| 测试 | pytest + TestClient | 26 个用例覆盖接口、切分、检索、问答、评测、UI |
+| 测试 | pytest + TestClient | 32 个用例覆盖接口、切分、检索、问答、评测、UI |
 | 部署 | Docker Compose + GitHub Actions | 命名卷持久化、健康检查、push 自动回归 |
 
 ## 核心能力
 
 - 文档接入：`.md` / `.txt` 上传，扩展名、编码、空内容、1 MB 大小四重校验
 - 切分管线：段落优先 + 固定窗口 + 重叠上下文，保留字符范围用于溯源
-- 向量检索：CJK 双字元 + 特征哈希，Top-K 返回相关度分数
+- 混合检索：CJK 双字元特征哈希向量 + BM25 关键词，min-max 归一化后 alpha 融合
 - RAG 问答：检索 → 拼 prompt → 生成回答 → 返回引用来源列表
-- 检索评测：Recall@K、MRR、平均延迟，内置 20 道跨文档评测题
+- 检索评测：Recall@K、MRR、平均延迟，内置 21 道跨文档评测题（支持混合/纯向量模式对比）
 - Web 控制台：文档库 / 问答 / 检索 / 评测四个页签，纯原生前端
 - 一键演示：`scripts/demo.sh` 重建演示库并启动服务
 
@@ -62,10 +62,10 @@ flowchart LR
 
 ## 量化指标（演示时报告）
 
-- 内置评测集 20 题：Recall@K = 1.0，MRR = 1.0，平均检索延迟约 0.4 ms
-  （说明口径：本地特征哈希 + 3 份小语料，是基线而非生产指标；换真实 Embedding
-  和更大语料后需要重新评测）
-- 26 个自动化测试全绿，GitHub Actions CI 自动回归
+- 内置评测集 21 题：混合检索 Recall@K = 1.0、MRR = 1.0；纯向量基线 MRR = 0.9683，
+  混合检索把一道关键词型问题从第 3 名提升到第 1 名
+  （说明口径：本地特征哈希 + BM25 + 3 份小语料，是基线而非生产指标）
+- 32 个自动化测试全绿，GitHub Actions CI 自动回归
 
 ## 简历描述模板
 
@@ -73,9 +73,9 @@ flowchart LR
 
 > EvidenceQA · 可溯源企业知识库问答系统（FastAPI / Python / SQLite / RAG）
 > - 独立完成文档接入、切分、向量检索、RAG 问答、检索评测全链路，支持引用溯源
-> - 实现免 API Key 的确定性 Embedding 与余弦 Top-K 检索，接真实 LLM 仅需改 Provider
-> - 建立 Recall@K / MRR / 延迟评测体系，内置 20 道跨文档评测题（Recall@K=1.0）
-> - 提供原生 Web 控制台与 Docker 部署，一键演示，26 个自动化测试全绿，CI 自动回归
+> - 实现免 API Key 的确定性 Embedding 与 BM25 + 向量混合检索，接真实模型仅需改实现
+> - 建立 Recall@K / MRR / 延迟评测体系，内置 21 道跨文档评测题，混合检索 MRR=1.0
+> - 提供原生 Web 控制台与 Docker 部署，一键演示，32 个自动化测试全绿，CI 自动回归
 
 **一段话版：**
 

@@ -71,7 +71,7 @@ def main() -> None:
             f"  - {document['title']} "
             f"({document['content_length']} 字符, {document['chunk_count']} 个片段)"
         )
-    print("评测集：data/eval_set.json（20 道题，覆盖 3 份文档）")
+    print("评测集：data/eval_set.json（21 道题，覆盖 3 份文档）")
 
 
 if __name__ == "__main__":

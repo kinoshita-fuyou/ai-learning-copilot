@@ -69,4 +69,5 @@ class EvalResultOut(BaseModel):
     avg_latency_ms: float
     total_queries: int
     k: int
+    mode: str
     details: list[EvalDetailOut]
