@@ -33,7 +33,7 @@ FastAPI · Python · SQLite · RAG · Docker
   Recall@K=1.0、MRR=1.0、平均检索延迟约 0.4ms；纯向量基线 MRR=0.9683
 - 实现 BM25 + 向量混合检索，关键词型问题排序从第 3 名提升到第 1 名
 - 提供原生 Web 控制台（上传/问答/检索/评测）与 Docker 一键部署，
-  32 个自动化测试全绿，GitHub Actions CI 自动回归
+  38 个自动化测试全绿，GitHub Actions CI 自动回归
 
 ### 结构化报告 Agent ReportFlow · 独立开发
 FastAPI · Python · OpenAI 兼容 API · 工具调用 · 失败降级
@@ -74,7 +74,7 @@ FastAPI · Python · SQLite · RAG · Docker
   swappable for hosted embeddings
 - 21-question cross-document benchmark with BM25+vector hybrid retrieval:
   Recall@K=1.0, MRR=1.0 (vs 0.9683 vector-only), ~0.4ms/search;
-  32 tests green, GitHub Actions CI
+  38 tests green, GitHub Actions CI
 
 **ReportFlow — Structured Report Agent · Solo**
 FastAPI · Python · Tool Calling · Failure Handling

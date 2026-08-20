@@ -58,7 +58,7 @@ cd ~/Documents/Codex/2026-06-14/ai/evidenceqa
 1. **Embedding 可替换**：本地特征哈希只是实现，接口与云端一致，换 BGE /
    OpenAI 只改一个 Provider 类。
 2. **评测先行**：先有 Recall@K / MRR，再做任何检索改动都有依据。
-3. **工程闭环**：32 个自动化测试 + GitHub Actions CI + Docker 一键部署 +
+3. **工程闭环**：38 个自动化测试 + GitHub Actions CI + Docker 一键部署 +
    断网可演示。
 
 > 如果面试官问"还能做什么"，用 Q17 的改进优先级回答，展示规划能力。

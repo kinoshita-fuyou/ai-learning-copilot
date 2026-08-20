@@ -4,7 +4,7 @@
 
 ## 代码与测试
 
-- [ ] `pytest -q` 全绿（当前 32 个用例）
+- [ ] `pytest -q` 全绿（当前 38 个用例）
 - [ ] `git status` 干净，最新代码已 push
 - [ ] GitHub Actions 上最后一次 CI 通过
 - [ ] 本地与 CI 的测试数一致（环境无关，靠 `EVIDENCEQA_ANSWER_PROVIDER=template` 隔离）
@@ -39,5 +39,5 @@
 - 特征哈希 Embedding 是词袋级别，不懂语义；换真实 Embedding 需重跑评测
 - 检索是全表扫描，百万级 chunk 需换向量索引（FAISS / sqlite-vec / pgvector）
 - 评测只覆盖检索，不覆盖回答质量；生产需加引用忠实度评测
-- 无鉴权与多租户隔离，生产需补 API Key + 文档级权限
+- 已做可选 API Key 鉴权（`EVIDENCEQA_API_KEY`，默认关闭）；多租户文档级权限未做
 - 只支持 md/txt，PDF/Word 需加解析器（管线已预留）

@@ -8,7 +8,7 @@ EvidenceQA 的目标不是做一个只会聊天的页面，而是让回答能回
 
 **已完成（v1.1.0）**：文档接入 → 切分 → 向量检索 → RAG 问答 → 评测 → Web 控制台
 → Docker 部署全链路。v1.1.0 新增 BM25 + 向量混合检索，评测 MRR 0.9683 → 1.0。
-32 个自动化测试全绿，GitHub Actions CI 持续回归。
+v1.2.0 新增可选 API Key 鉴权（默认关闭）。38 个自动化测试全绿，GitHub Actions CI 持续回归。
 同仓库的补充项目 [ReportFlow Agent](../reportflow/README.md)（结构化输出 +
 工具调用 + 失败降级）也已交付，20 个自动化测试全绿。十天作品集全部完成。
 
@@ -22,6 +22,7 @@ EvidenceQA 的目标不是做一个只会聊天的页面，而是让回答能回
 - 余弦相似度 + BM25 混合检索（alpha 融合），返回来源文档、片段号与相关度分数
 - RAG 问答 `/ask`：回答附带引用来源；支持离线模板与 OpenAI 兼容 LLM 双 Provider
 - 检索评测：Recall@K、MRR、平均延迟，内置 21 道跨文档评测题（支持混合/纯向量模式对比）
+- 可选 API Key 鉴权：设置 `EVIDENCEQA_API_KEY` 后所有数据接口要求 `X-API-Key`，默认关闭不影响演示
 - 简洁 Web 控制台：文档库 / 问答 / 检索 / 评测四页签，纯原生前端零依赖
 - Docker Compose 一键部署，命名卷持久化 + 健康检查
 - 一键演示 `scripts/demo.sh`：重建演示库 → 启动 → 打开浏览器
@@ -74,6 +75,7 @@ Document upload -> SQLite document store -> chunk pipeline -> vector retrieval
 | --- | --- | --- |
 | `EVIDENCEQA_DB_PATH` | `./evidenceqa.db` | SQLite 数据库文件位置 |
 | `EVIDENCEQA_ANSWER_PROVIDER` | `auto` | `template` / `llm` / `auto`；测试与演示默认强制 `template` |
+| `EVIDENCEQA_API_KEY` | 无 | 设置后启用 API Key 鉴权（`X-API-Key` 请求头），默认关闭 |
 | `OPENAI_API_KEY` | 无 | 设置后 `auto` 模式启用 LLM 回答 |
 | `OPENAI_BASE_URL` | 无 | OpenAI 兼容 API 地址（可接中转/本地模型） |
 | `OPENAI_MODEL` | `gpt-3.5-turbo` | LLM 模型名 |
@@ -129,7 +131,7 @@ evidenceqa/
 ├── data/                 # 演示文档与评测集
 ├── interview/            # 面试材料
 ├── scripts/              # 启动 / 测试 / 一键演示
-├── tests/                # 32 个 pytest 用例
+├── tests/                # 38 个 pytest 用例
 ├── Dockerfile
 └── docker-compose.yml
 ```
@@ -140,7 +142,7 @@ evidenceqa/
 ./scripts/test.sh
 ```
 
-- 32 个用例覆盖切分、Embedding、BM25、混合检索、问答、评测、错误处理与 UI
+- 38 个用例覆盖切分、Embedding、BM25、混合检索、问答、评测、鉴权、错误处理与 UI
 - 测试通过 `EVIDENCEQA_ANSWER_PROVIDER=template` 强制离线，与开发机环境无关
 - 每次 push 由 GitHub Actions 自动回归（`.github/workflows/ci.yml`）
 

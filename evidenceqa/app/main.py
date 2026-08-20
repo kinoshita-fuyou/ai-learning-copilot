@@ -2,10 +2,11 @@ from contextlib import asynccontextmanager
 import json
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, Query, UploadFile, status
+from fastapi import Depends, FastAPI, File, HTTPException, Query, UploadFile, status
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from app.auth import load_api_key, require_api_key
 from app.chunking import chunk_text, normalize_text
 from app.database import DB_PATH, init_db
 from app.embeddings import HashingEmbedder
@@ -50,6 +51,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 app.state.db_path = DB_PATH
+app.state.api_key = load_api_key()
 embedder = HashingEmbedder()
 answer_provider = get_answer_provider()
 
@@ -64,13 +66,18 @@ def web_console() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html")
 
 
-@app.get("/eval/demo", response_model=list[EvalQueryItem])
+@app.get("/eval/demo", response_model=list[EvalQueryItem], dependencies=[Depends(require_api_key)])
 def api_eval_demo_set() -> list[dict]:
     with open(EVAL_SET_PATH, encoding="utf-8") as handle:
         return json.load(handle)
 
 
-@app.post("/documents/upload", response_model=DocumentOut, status_code=status.HTTP_201_CREATED)
+@app.post(
+    "/documents/upload",
+    response_model=DocumentOut,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_api_key)],
+)
 async def upload_document(file: UploadFile = File(...)) -> dict:
     source_name = file.filename or "untitled"
     extension = Path(source_name).suffix.lower()
@@ -115,7 +122,7 @@ async def upload_document(file: UploadFile = File(...)) -> dict:
     return get_document(document["id"], app.state.db_path)
 
 
-@app.get("/search", response_model=list[SearchHit])
+@app.get("/search", response_model=list[SearchHit], dependencies=[Depends(require_api_key)])
 def api_search(
     q: str = Query(..., min_length=1, max_length=500),
     top_k: int = Query(5, ge=1, le=20),
@@ -128,12 +135,16 @@ def api_search(
     return search_chunks(query=q, embedder=embedder, top_k=top_k, db_path=app.state.db_path)
 
 
-@app.get("/documents", response_model=list[DocumentOut])
+@app.get("/documents", response_model=list[DocumentOut], dependencies=[Depends(require_api_key)])
 def api_list_documents() -> list[dict]:
     return list_documents(app.state.db_path)
 
 
-@app.get("/documents/{document_id}", response_model=DocumentOut)
+@app.get(
+    "/documents/{document_id}",
+    response_model=DocumentOut,
+    dependencies=[Depends(require_api_key)],
+)
 def api_get_document(document_id: int) -> dict:
     document = get_document(document_id, app.state.db_path)
     if document is None:
@@ -141,20 +152,28 @@ def api_get_document(document_id: int) -> dict:
     return document
 
 
-@app.get("/documents/{document_id}/chunks", response_model=list[DocumentChunkOut])
+@app.get(
+    "/documents/{document_id}/chunks",
+    response_model=list[DocumentChunkOut],
+    dependencies=[Depends(require_api_key)],
+)
 def api_list_document_chunks(document_id: int) -> list[dict]:
     if get_document(document_id, app.state.db_path) is None:
         raise HTTPException(status_code=404, detail="Document not found")
     return list_document_chunks(document_id, app.state.db_path)
 
 
-@app.delete("/documents/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
+@app.delete(
+    "/documents/{document_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_api_key)],
+)
 def api_delete_document(document_id: int) -> None:
     deleted = delete_document(document_id, app.state.db_path)
     if not deleted:
         raise HTTPException(status_code=404, detail="Document not found")
 
-@app.post("/ask", response_model=AskResponse)
+@app.post("/ask", response_model=AskResponse, dependencies=[Depends(require_api_key)])
 def api_ask(request: AskRequest) -> dict:
     contexts = hybrid_search_chunks(
         query=request.question,
@@ -171,7 +190,11 @@ def api_ask(request: AskRequest) -> dict:
         ) from error
     return {"answer": result.answer, "sources": result.sources}
 
-@app.post("/eval/retrieval", response_model=EvalResultOut)
+@app.post(
+    "/eval/retrieval",
+    response_model=EvalResultOut,
+    dependencies=[Depends(require_api_key)],
+)
 def api_eval_retrieval(
     queries: list[EvalQueryItem],
     k: int = Query(5, ge=1, le=20),

@@ -116,7 +116,7 @@ pdfplumber / PyMuPDF 抽文本），输出仍是一段字符串，后续管线�
 pytest + TestClient，每个测试用临时 SQLite 隔离数据。分层：切分/embedding 单测、
 接口测试（上传、检索、问答、评测、错误处理）、UI 测试（静态资源、控制台渲染、
 演示库可检索）。conftest 里强制 `EVIDENCEQA_ANSWER_PROVIDER=template`，所以
-测试与开发机上的 API Key 无关，任何环境结果一致。共 32 个用例，跑一遍几秒，
+测试与开发机上的 API Key 无关，任何环境结果一致。共 38 个用例，跑一遍几秒，
 CI 在每次 push 自动回归。
 
 **Q16：怎么部署？**
@@ -129,6 +129,6 @@ Docker Compose：`docker compose up --build` 一条命令。数据库路径由
 **Q17：如果给你两周，你会怎么改进这个项目？**
 
 优先级：① 接真实 Embedding + 向量索引，重建评测基线；② 回答质量评测
-（引用忠实度 + LLM-as-judge）；③ 多用户与文档权限（谁能搜到什么）；
+（引用忠实度 + LLM-as-judge）；③ 多租户文档级权限（已做可选 API Key 鉴权）；
 ④ 重排层和流式回答；⑤ PDF/Word 解析；⑥ 接入更多真实业务文档做压力测试。
 改进每一步都用评测集验证，而不是拍脑袋。

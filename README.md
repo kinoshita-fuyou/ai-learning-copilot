@@ -14,7 +14,7 @@
 
 | 项目 | 定位 | 关键能力 | 验证 |
 | --- | --- | --- | --- |
-| [EvidenceQA](evidenceqa/README.md) | 可溯源企业知识库问答 | 文档接入、切分、Embedding、BM25 混合检索、RAG 引用溯源、Recall@K/MRR 评测、Web 控制台、Docker | 32 测试 · 21 道评测题 混合检索 MRR=1.0 |
+| [EvidenceQA](evidenceqa/README.md) | 可溯源企业知识库问答 | 文档接入、切分、Embedding、BM25 混合检索、RAG 引用溯源、Recall@K/MRR 评测、Web 控制台、Docker、可选鉴权 | 38 测试 · 21 道评测题 混合检索 MRR=1.0 |
 | [ReportFlow](reportflow/README.md) | 结构化报告 Agent | 工具调用循环、结构化输出校验重试、失败降级、LLM/规则双实现 | 20 测试 · 失败注入演示 |
 
 ## 快速体验
@@ -33,7 +33,7 @@ cd reportflow && ./scripts/demo.sh
 ## 测试与 CI
 
 ```bash
-./check.sh                            # 一键跑两个项目（52 个用例）
+./check.sh                            # 一键跑两个项目（58 个用例）
 ```
 
 GitHub Actions 在每次 push 时对两个项目并行回归（`.github/workflows/ci.yml`），

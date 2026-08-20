@@ -17,7 +17,7 @@ FastAPI · Python · SQLite · RAG · Docker
   Recall@K=1.0、MRR=1.0、平均检索延迟约 0.4ms；纯向量基线 MRR=0.9683
 - 实现 BM25 + 向量混合检索，关键词型问题排序从第 3 名提升到第 1 名
 - 提供原生 Web 控制台（上传/问答/检索/评测）与 Docker 一键部署，
-  32 个自动化测试全绿，GitHub Actions CI 自动回归
+  38 个自动化测试全绿，GitHub Actions CI 自动回归
 
 ## English Version
 
@@ -49,7 +49,7 @@ FastAPI · Python · SQLite · RAG · Docker
   云端对齐，接 BGE 只改一个类，再用同一套评测集验证。"
 - **评测**："21 道题覆盖 3 份文档，Recall@K 管召回、MRR 管排序、延迟管性能；
   局限我也清楚——它不评估回答质量，下一步加 LLM-as-judge。"
-- **工程化**："32 个测试隔离数据、秒级跑完，CI 在每次 push 自动回归；
+- **工程化**："38 个测试隔离数据、秒级跑完，CI 在每次 push 自动回归；
   Docker 用命名卷持久化数据库，容器删了数据还在。"
 
 > 注意：所有数字以仓库当前状态为准，改动代码后记得同步本文件。

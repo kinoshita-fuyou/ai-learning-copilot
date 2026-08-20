@@ -32,7 +32,22 @@ function truncate(text, max) {
 }
 
 async function api(path, options = {}) {
-  const response = await fetch(path, options);
+  const headers = new Headers(options.headers || {});
+  const storedKey = localStorage.getItem("evidenceqa_api_key");
+  if (storedKey) headers.set("X-API-Key", storedKey);
+  options = { ...options, headers };
+
+  let response = await fetch(path, options);
+  if (response.status === 401 && !options._authed) {
+    const key = window.prompt("该服务启用了 API Key 鉴权，请输入 EVIDENCEQA_API_KEY：");
+    if (key) {
+      localStorage.setItem("evidenceqa_api_key", key);
+      headers.set("X-API-Key", key);
+      options = { ...options, headers, _authed: true };
+      response = await fetch(path, options);
+    }
+  }
+
   if (!response.ok) {
     let detail = `请求失败（HTTP ${response.status}）`;
     try {
